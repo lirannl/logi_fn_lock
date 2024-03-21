@@ -1,0 +1,9 @@
+[workspace]
+package.version = "0.1.0"
+package.authors = ["Liran Piade"]
+package.edition = "2021"
+package.license = "GPL-3.0-only"
+package.readme = "readme.md"
+
+resolver = "2"
+members = ["fn_activator"]
