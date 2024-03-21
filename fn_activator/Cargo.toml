@@ -7,4 +7,5 @@ license.workspace = true
 readme.workspace = true
 
 [dependencies]
-hidapi = { version = "2.6.1", default-features = false, features = ["linux-native"]}
+anyhow = "1.0.81"
+hidapi = { version = "2.6.1", features = ["windows-native"] }
