@@ -1,10 +1,6 @@
 #![feature(let_chains)]
 use anyhow::Result;
-use clap::Parser;
-use hidapi::HidApi;
-mod args;
-use args::Args;
-use regex_static::static_regex;
+use hidapi::{HidApi, HidError};
 
 struct Keyboard {
     pub vendor: u16,
@@ -24,60 +20,40 @@ fn main() {
     _main().unwrap();
 }
 
-#[cfg(target_os = "linux")]
-fn device_finder(device: String) -> Result<Keyboard> {
-    use std::{fs::read_link, io};
-
-    let target = read_link(format!("/dev/{device}"))?
-        .as_os_str()
-        .to_str()
-        .ok_or(io::Error::new(io::ErrorKind::NotFound, ""))?
-        .to_string();
-    #[allow(non_upper_case_globals)]
-    let (vendor, device) = if let Some(captures) =
-        static_regex!(r"([0-9A-F]{4}):([0-9A-F]{4})\.[0-9A-F]{4}/hidraw").captures(&target)
-        && let [_, vendor, device] = captures.iter().filter_map(|c| c).collect::<Vec<_>>()[..]
-    {
-        Ok((vendor.as_str(), device.as_str()))
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "The hidraw device provided does not have a valid device id",
-        ))
-    }?;
-    let (vendor, device) = (
-        u16::from_str_radix(vendor, 16)?,
-        u16::from_str_radix(device, 16)?,
-    );
-    let fkey_sequence = match (vendor, device) {
-        (LOGITECH_VENDOR_ID, K380_ID) => Ok(&K380_K480_SEQ),
-        (LOGITECH_VENDOR_ID, K480_ID) => Ok(&K380_K480_SEQ),
-        _ => Err(io::Error::new(
-            io::ErrorKind::NotFound,
-            "The device provided is not supported",
-        )),
-    }?;
-    Ok(Keyboard {
-        vendor,
-        device_id: device,
-        fkey_sequence,
-    })
-}
-
-#[cfg(target_os = "macos")]
-fn device_finder(device: String) -> Result<Keyboard> {}
-
-#[cfg(target_os = "windows")]
-fn device_finder(device: String) -> Result<Keyboard> {}
-
 fn _main() -> Result<()> {
-    let args = Args::parse();
+    let hid = HidApi::new()?;
 
-    let device = device_finder(args.device)?;
+    let k380 = Keyboard {
+        vendor: LOGITECH_VENDOR_ID,
+        device_id: K380_ID,
+        fkey_sequence: K380_K480_SEQ,
+    };
+    let k480 = Keyboard {
+        vendor: LOGITECH_VENDOR_ID,
+        device_id: K480_ID,
+        fkey_sequence: K380_K480_SEQ,
+    };
 
-    HidApi::new()?
-        .open(device.vendor, device.device_id)?
-        .write(&device.fkey_sequence)?;
+    for (hid_node, device) in [k380, k480].into_iter().filter_map(|keyboard| {
+        Some((
+            hid.open(keyboard.vendor, keyboard.device_id)
+                .map_err(react_to_err)
+                .ok()?,
+            keyboard,
+        ))
+    }) {
+        let _ = hid_node.write(&device.fkey_sequence);
+    }
 
     Ok(())
+}
+
+fn react_to_err(err: HidError) -> HidError {
+    #[cfg(target_os = "linux")]
+    if let HidError::HidApiError { message } = &err
+        && !message.starts_with("No HID devices")
+    {
+        eprintln!("{err:#?}");
+    }
+    err
 }

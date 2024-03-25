@@ -8,6 +8,5 @@ readme.workspace = true
 
 [dependencies]
 anyhow = "1.0"
-clap = { version = "4.5", features = ["derive"] }
 hidapi = { version = "2.6", features = ["windows-native"] }
 regex_static = "0.1"
