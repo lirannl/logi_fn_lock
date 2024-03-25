@@ -29,7 +29,11 @@
       }; in
     {
       packages.default = package;
-
-      services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/fn_activator\"";
+      nixosModules.default = {config, ...}: {
+        options = {
+          services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/fn_activator\"";
+        };
+        config = {};
+      };
     });
 }
