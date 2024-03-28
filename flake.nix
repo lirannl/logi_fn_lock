@@ -17,10 +17,9 @@
     {
       name = system;
       value = 
-      let pkgs = import nixpkgs { inherit system; }; in
-      let
-        craneLib = crane.lib.${system}.overrideToolchain 
-          fenix.packages.${system}.latest.toolchain;
+      let pkgs = import nixpkgs { inherit system; };
+          craneLib = crane.lib.${system}.overrideToolchain 
+            fenix.packages.${system}.latest.toolchain;
       in
       let workspace = (fromTOML (builtins.readFile ./Cargo.toml)).workspace; 
           pkgToml = fromTOML (builtins.readFile ./fn_activator/Cargo.toml); 
