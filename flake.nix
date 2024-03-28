@@ -4,7 +4,6 @@
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
-    flake-utils.url = "github:numtide/flake-utils";
     fenix = {
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -12,8 +11,12 @@
     };
   };
 
-  outputs = { nixpkgs, crane, flake-utils, fenix, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs = { nixpkgs, crane, fenix, ... }:
+  let targets = ["aarch64-linux" "x86_64-linux"]; in
+    builtins.listToAttrs (map (system:
+    {
+      name = system;
+      value = 
       let pkgs = import nixpkgs { inherit system; }; in
       let
         craneLib = crane.lib.${system}.overrideToolchain 
@@ -29,13 +32,14 @@
             nativeBuildInputs = [pkgs.pkg-config pkgs.udev];
           }; 
       in
-    {
-      packages.default = package;
-      nixosModules.default = {config, ...}: {
-        options = {
-          services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/fn_activator\"";
+      {
+        packages.default = package;
+        nixosModules.default = {config, ...}: {
+          options = {
+            services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/fn_activator\"";
+          };
+          config = {};
         };
-        config = {};
       };
-    });
+    }) targets);
 }
