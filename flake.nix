@@ -16,12 +16,11 @@
     builtins.listToAttrs (map (system:
     {
       name = system;
-      value = 
+      value =
       let pkgs = import nixpkgs { inherit system; };
           craneLib = crane.lib.${system}.overrideToolchain 
             fenix.packages.${system}.latest.toolchain;
-      in
-      let workspace = (fromTOML (builtins.readFile ./Cargo.toml)).workspace; 
+          workspace = (fromTOML (builtins.readFile ./Cargo.toml)).workspace; 
           pkgToml = fromTOML (builtins.readFile ./fn_activator/Cargo.toml); 
           package = craneLib.buildPackage {
             src = craneLib.cleanCargoSource (craneLib.path ./.);
