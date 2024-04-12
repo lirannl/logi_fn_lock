@@ -1,0 +1,2 @@
+ACTION=="add", KERNEL=="hidraw[0-9]*", RUN+="/usr/share/logi_fn_lock/fn_activator"
+ 
