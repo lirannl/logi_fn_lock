@@ -6,5 +6,5 @@ package.license = "GPL-3.0-only"
 package.readme = "readme.md"
 
 resolver = "2"
-members = [ "fn_activator" ]
-default-members = [ "fn_activator" ]
+members = [ "logi_fn_lock" ]
+default-members = [ "logi_fn_lock" ]

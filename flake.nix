@@ -21,7 +21,7 @@
           craneLib = crane.lib.${system}.overrideToolchain 
             fenix.packages.${system}.latest.toolchain;
           workspace = (fromTOML (builtins.readFile ./Cargo.toml)).workspace; 
-          pkgToml = fromTOML (builtins.readFile ./fn_activator/Cargo.toml); 
+          pkgToml = fromTOML (builtins.readFile ./logi_fn_lock/Cargo.toml); 
           package = craneLib.buildPackage {
             src = craneLib.cleanCargoSource (craneLib.path ./.);
             pname = pkgToml.package.name;
@@ -34,7 +34,7 @@
         packages.default = package;
         nixosModules.default = {config, ...}: {
           options = {
-            services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/fn_activator\"";
+            services.udev.extraRules = "ACTION==\"add\", KERNEL==\"hidraw[0-9]*\", RUN+=\"${package}/bin/logi_fn_lock\"";
           };
           config = {};
         };
